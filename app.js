@@ -1,6 +1,6 @@
-// app.js
 const express = require('express');
 const {specs, swaggerUi } = require('./swagger');
+const routes = require('./src/routes'); 
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -8,15 +8,13 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
-
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 app.get('/', (req, res) => {
   res.send('Hello, Swagger!');
 });
 
-const userRoutes = require('./routes/userRoutes');
-app.use('/', userRoutes);
+app.use('/api', routes);
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
