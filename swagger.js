@@ -11,7 +11,8 @@ const options = {
       description: 'A simple User Management API with Swagger documentation',
     },
   },
-  apis: ['./routes/*.js'], // Path to your API routes
+
+  apis: ['./src/routes/*.js', './src/controllers/*.js'], // Path to both routes and controllers
 };
 
 const specs = swaggerJsdoc(options);
