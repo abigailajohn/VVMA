@@ -1,6 +1,7 @@
 const express = require('express');
 const {specs, swaggerUi } = require('./swagger');
-const routes = require('./src/routes'); 
+const routes = require('./src/routes');
+const groupRoutes = require('./src/routes/group');
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -15,6 +16,8 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api', routes);
+app.use('/api/groups', groupRoutes);
+
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);

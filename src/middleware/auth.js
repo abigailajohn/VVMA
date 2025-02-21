@@ -7,14 +7,13 @@ const authMiddleware = async (req, res, next) => {
         if (!token) {
             return res.status(401).json({ error: 'Authorization required' });
         }
-        // this is actually a secure, I'll make it vulnerable. 
+        
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decoded;
         next();
-    } catch (err) {
+    } catch (err) { 
         return res.status(401).json({ error: 'Invalid token' });
     }
-
 };
 
 module.exports = authMiddleware;
