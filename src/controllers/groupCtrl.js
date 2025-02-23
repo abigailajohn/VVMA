@@ -407,7 +407,6 @@ const getGroupMembers = async (req, res) => {
 const removeGroupMember = async (req, res) => {
     const groupId = req.params.id;
     const memberIdToRemove = req.params.uid;
-    const requestingUserId = req.user.userId;
 
     try {
         const [groups] = await db.execute(
