@@ -10,12 +10,15 @@
   "description": "",
   "dependencies": {
     "body-parser": "^1.20.3",
+    "crypto": "^1.0.1",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-validator": "^7.2.1",
     "jsonwebtoken": "^9.0.2",
     "mysql": "^2.18.1",
     "mysql2": "^3.12.0",
+    "node-fetch": "^2.7.0",
+    "nodemailer": "^6.10.0",
     "nodemon": "^3.1.9",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"

@@ -1,6 +1,5 @@
-//all auth related endpoints 
 const express = require('express');
-const { registerUser, loginUser  } = require('../controllers/authCtrl');
+const { registerUser, loginUser  } = require('../../controllers/v2/authCtrl');
 
 const router = express.Router();
 

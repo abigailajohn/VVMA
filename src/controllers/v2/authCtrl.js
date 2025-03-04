@@ -1,12 +1,11 @@
-const db = require('../db/mysqldb');
+const db = require('../../db/mysqldb');
 const jwt = require('jsonwebtoken');
 
 /**
  * @swagger
  * /api/auth/register:
  *   post:
- *     summary: Register a new user
- *     description: Creates a new user account.
+ *     summary: Register
  *     tags:
  *       - Auth
  *     requestBody:
@@ -24,18 +23,17 @@ const jwt = require('jsonwebtoken');
  *                 type: string
  *     responses:
  *       201:
- *         description: User registered successfully
+ *         description: User a registered
  *       400:
- *         description: Bad request, invalid input
+ *         description: Invalid input
  */
 
 const registerUser = async (req, res) => {
     try {
         const { username, email, password, role = 'user', bio = null } = req.body;
-        const query = `INSERT INTO users (username, email, password, role, bio) 
-                       VALUES ('${username}', '${email}', '${password}', '${role}', '${bio}')`;
+        const query = `INSERT INTO users (username, email, password, role, bio) VALUES (?, ?, ?, ?, ?)`;
 
-        const [results] = await db.execute(query);
+        const [results] = await db.execute(query, [username, email, password, role, bio]);
 
         res.status(201).json({ id: results.insertId, username, email, password, role, bio });
     } catch (err) {
@@ -47,8 +45,7 @@ const registerUser = async (req, res) => {
  * @swagger
  * /api/auth/login:
  *   post:
- *     summary: Login user
- *     description: Authenticate a user and return a JWT token
+ *     summary: Login
  *     tags:
  *       - Auth
  *     requestBody:
@@ -91,7 +88,7 @@ const registerUser = async (req, res) => {
  *       401:
  *         description: Invalid credentials
  *       500:
- *         description: Server error
+ *         description: Internal server error
  */
 
 const loginUser = async (req, res) => {
@@ -99,7 +96,6 @@ const loginUser = async (req, res) => {
         const { email, password } = req.body;
         const query = `SELECT * FROM users WHERE email = '${email}' AND password = '${password}'`;
         const [users] = await db.execute(query);
-
         if (users.length) {
             const user = users[0];
             const token = jwt.sign(
@@ -110,7 +106,6 @@ const loginUser = async (req, res) => {
                 },
                 process.env.JWT_SECRET, { expiresIn: '2h' }
             );
-
             res.json({ message: "Login successful", token });
         } else {
             res.status(401).json({ error: 'Invalid credentials' });

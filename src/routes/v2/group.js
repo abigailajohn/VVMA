@@ -5,21 +5,18 @@ const {
     getGroupById,
     createGroup,
     joinGroup,
+    joinGroupByInviteUrl,
+    refreshGroupInvite,
     updateGroup,
     deleteGroup,
     getGroupMembers,
     removeGroupMember,
     promoteToAdmin
-} = require('../controllers/groupCtrl');
-
-const authMiddleware = require('../middleware/auth');
-
+} = require('../../controllers/v2/groupCtrl');
+const authMiddleware = require('../../middleware/auth');
 const router = express.Router();
-
-// Apply auth middleware to all routes
 router.use(authMiddleware);
 
-// Validation middleware
 const createGroupValidation = [
     body('name').notEmpty().withMessage('Group name is required'),
     body('description').notEmpty().withMessage('Group description is required'),
@@ -36,11 +33,12 @@ router.get('/', getAllGroups);
 router.get('/:id', getGroupById);
 router.post('/', createGroupValidation, createGroup);
 router.post('/:id/join', joinGroup);
+router.post('/:id/refresh-invite', refreshGroupInvite);
+router.post('/join-by-invite', joinGroupByInviteUrl);
 router.patch('/:id', updateGroupValidation, updateGroup);
 router.delete('/:id', deleteGroup);
 router.get('/:id/members', getGroupMembers);
 router.delete('/:id/members/:uid', removeGroupMember);
 router.put('/:id/promote/:uid', promoteToAdmin);
-
 
 module.exports = router;

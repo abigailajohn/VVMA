@@ -16,10 +16,12 @@ CREATE TABLE IF NOT EXISTS `groups` (
   name VARCHAR(255) NOT NULL,
   description TEXT,
   max_members INT NOT NULL,
+  invite_code VARCHAR(32),
   creator_id INT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
 
 CREATE TABLE IF NOT EXISTS group_members (
   id INT AUTO_INCREMENT PRIMARY KEY,
