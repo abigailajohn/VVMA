@@ -1,9 +1,9 @@
 const express = require('express');
-const { requestPasswordReset, validateResetPassword } = require('../controllers/userCtrl');
+const { requestPasswordResetCtrl, validateResetPasswordCtrl } = require('../controllers/userCtrl');
 
 const router = express.Router();
 
-router.post('/reset-password', requestPasswordReset);
-router.get('/reset-password', validateResetPassword);
+router.post('/reset-password', requestPasswordResetCtrl);
+router.get('/reset-password', validateResetPasswordCtrl);
 
 module.exports = router;

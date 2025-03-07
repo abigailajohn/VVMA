@@ -1,0 +1,63 @@
+const db = require('../db/mysqldb');
+const jwt = require('jsonwebtoken');
+
+const getUserById = async (id) => {
+  const query = "SELECT * FROM users WHERE id = '" + id + "'";
+  const [users] = await db.execute(query);
+  return users[0];
+};
+
+const updateUser = async (id, { username, email, bio }) => {
+  const [existing] = await db.execute("SELECT id FROM users WHERE id = ?", [id]);
+  if (existing.length === 0) return null;
+  
+  await db.execute(
+    "UPDATE users SET username = ?, email = ?, bio = ? WHERE id = ?",
+    [username, email, bio, id]
+  );
+ 
+  const [rows] = await db.execute(
+    "SELECT id, username, email, role, bio, created_at FROM users WHERE id = ?",
+    [id]
+  );
+  return rows[0];
+};
+
+const deleteUser = async (id) => {
+  const [users] = await db.execute("SELECT * FROM users WHERE id = ?", [id]);
+  if (users.length === 0) return { error: "User not found", status: 404 };
+  
+  const [result] = await db.execute("DELETE FROM users WHERE id = ?", [id]);
+  return result.affectedRows;
+};
+
+const requestPasswordReset = async (email) => {
+  const token = jwt.sign(
+    {
+      email, 
+      role: "user",
+      reset: true,
+      resetRequestedAt: new Date().toISOString()
+    },
+    process.env.JWT_SECRET || 'secret',
+    { expiresIn: '24h' }
+  );
+  return token;
+};
+
+const validateResetPassword = async (token) => {
+  return new Promise((resolve, reject) => {
+    jwt.verify(token, process.env.JWT_SECRET || 'secret', (err, decoded) => {
+      if (err) return reject(err);
+      resolve(decoded);
+    });
+  });
+};
+
+module.exports = {
+  getUserById,
+  updateUser,
+  deleteUser,
+  requestPasswordReset,
+  validateResetPassword
+};

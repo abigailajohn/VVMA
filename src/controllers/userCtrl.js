@@ -1,5 +1,4 @@
-const db = require('../db/mysqldb');
-const jwt = require('jsonwebtoken');
+const { getUserById, updateUser, deleteUser, requestPasswordReset, validateResetPassword } = require('../models/userModel');
 
 /**
  * @swagger
@@ -29,15 +28,11 @@ const jwt = require('jsonwebtoken');
  *         description: Internal server error.
  */
 
-const getUserById = async (req, res) => {
+const getUserByIdCtrl = async (req, res) => {
   try {
-    const { id } = req.params;
-    const query = "SELECT * FROM users WHERE id = '" + id + "'";
-    const [users] = await db.execute(query);
-    if (users.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    res.json(users[0]);
+    const user = await getUserById(req.params.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -48,7 +43,7 @@ const getUserById = async (req, res) => {
  * /api/users/{id}:
  *   patch:
  *     summary: Update a user profile
- *     description: Updates user fields using data from the request body. Vulnerable to mass assignment and SQL injection.
+ *     description: Updates specific user fields (username, email, and bio) 
  *     tags:
  *       - Users
  *     parameters:
@@ -64,7 +59,7 @@ const getUserById = async (req, res) => {
  *         application/json:
  *           schema:
  *             type: object
- *             description: The fields to update. Any field may be updated without validation.
+ *             description: The fields to update. Only "username", "email", and "bio" are allowed.
  *     responses:
  *       200:
  *         description: User updated successfully.
@@ -72,22 +67,11 @@ const getUserById = async (req, res) => {
  *         description: Internal server error.
  */
 
-const updateUser = async (req, res) => {
+const updateUserCtrl = async (req, res) => {
   try {
-    const { id } = req.params;
-    const updates = req.body;
-    let setClause = '';
-    for (let key in updates) {
-      setClause += `${key} = '${updates[key]}', `;
-    }
-    setClause = setClause.slice(0, -2);
-    const query = `UPDATE users SET ${setClause} WHERE id = '${id}'`;
-    const [result] = await db.execute(query);
-    res.json({
-      message: 'User updated',
-      affectedRows: result.affectedRows,
-      updatedFields: updates,
-    });
+    const user = await updateUser(req.params.id, req.body);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ message: 'User updated successfully', user });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -98,7 +82,8 @@ const updateUser = async (req, res) => {
  * /api/users/{id}:
  *   delete:
  *     summary: Delete a user account
- *     description: Deletes the user account by ID without proper authorization checks. Vulnerable to broken function level authorization.
+ *     description: >
+ *       Deletes the user account specified by the ID.
  *     tags:
  *       - Users
  *     parameters:
@@ -107,22 +92,37 @@ const updateUser = async (req, res) => {
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the user to delete.
+ *         description: The unique ID of the user to delete.
  *     responses:
  *       200:
  *         description: User deleted successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 affectedRows:
+ *                   type: integer
+ *       403:
+ *         description: Not authorized to delete this user.
+ *       404:
+ *         description: User not found.
  *       500:
  *         description: Internal server error.
  */
-
-const deleteUser = async (req, res) => {
+const deleteUserCtrl = async (req, res) => {
   try {
-    const { id } = req.params;
-    const query = "DELETE FROM users WHERE id = '" + id + "'";
-    const [result] = await db.execute(query);
-    res.json({
-      message: 'User deleted',
-    });
+    if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+    if (req.user.userId !== Number(req.params.id) && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized to delete this user' });
+    }
+    const affectedRows = await deleteUser(req.params.id);
+    if (typeof affectedRows === "object" && affectedRows.error) {
+      return res.status(affectedRows.status).json({ error: affectedRows.error });
+    }
+    res.json({ message: 'User deleted successfully', affectedRows });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -158,23 +158,10 @@ const deleteUser = async (req, res) => {
  *         description: Internal server error.
  */
 
-const requestPasswordReset = async (req, res) => {
+const requestPasswordResetCtrl = async (req, res) => {
   try {
-    const { email } = req.body;
-    const token = jwt.sign(
-      {
-        email, 
-        role: "user",
-        reset: true,
-        resetRequestedAt: new Date().toISOString()
-      },
-      'secret',
-      { expiresIn: '24h' }
-    );
-    res.json({
-      message: 'Password reset token generated',
-      token
-    });
+    const token = await requestPasswordReset(req.body.email);
+    res.json({ message: 'Password reset token generated', token });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -208,27 +195,19 @@ const requestPasswordReset = async (req, res) => {
  *         description: Internal server error.
  */
 
-const validateResetPassword = async (req, res) => {
+const validateResetPasswordCtrl = async (req, res) => {
   try {
-    const { token } = req.query;
-    jwt.verify(token, 'secret', (err, decoded) => {
-      if (err) {
-        return res.status(400).json({ error: 'Invalid or expired token', details: err.message });
-      }
-      res.json({
-        message: 'Token is valid. Proceed to reset password.',
-        decoded
-      });
-    });
+    const decoded = await validateResetPassword(req.query.token);
+    res.json({ message: 'Token is valid. Proceed to reset password.', decoded });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(400).json({ error: 'Invalid or expired token', details: err.message });
   }
 };
 
 module.exports = {
-  getUserById,
-  updateUser,
-  deleteUser,
-  requestPasswordReset,
-  validateResetPassword,
+  getUserByIdCtrl,
+  updateUserCtrl,
+  deleteUserCtrl,
+  requestPasswordResetCtrl,
+  validateResetPasswordCtrl
 };

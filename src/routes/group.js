@@ -1,15 +1,15 @@
 const express = require('express');
 const { body } = require('express-validator');
 const {
-    getAllGroups,
-    getGroupById,
-    createGroup,
-    joinGroup,
-    updateGroup,
-    deleteGroup,
-    getGroupMembers,
-    removeGroupMember,
-    promoteToAdmin
+        getAllGroupsCtrl,
+        getGroupByIdCtrl,
+        createGroupCtrl,
+        joinGroupCtrl,
+        updateGroupCtrl,
+        deleteGroupCtrl,
+        getGroupMembersCtrl,
+        removeGroupMemberCtrl,
+        promoteToAdminCtrl
 } = require('../controllers/groupCtrl');
 
 const authMiddleware = require('../middleware/auth');
@@ -32,15 +32,14 @@ const updateGroupValidation = [
     body('maxMembers').optional().isInt({ min: 2 }).withMessage('Max members must be at least 2')
 ];
 
-router.get('/', getAllGroups);
-router.get('/:id', getGroupById);
-router.post('/', createGroupValidation, createGroup);
-router.post('/:id/join', joinGroup);
-router.patch('/:id', updateGroupValidation, updateGroup);
-router.delete('/:id', deleteGroup);
-router.get('/:id/members', getGroupMembers);
-router.delete('/:id/members/:uid', removeGroupMember);
-router.put('/:id/promote/:uid', promoteToAdmin);
-
+router.get('/', getAllGroupsCtrl);
+router.get('/:id', getGroupByIdCtrl);
+router.post('/', createGroupValidation, createGroupCtrl);
+router.post('/:id/join', joinGroupCtrl);
+router.patch('/:id', updateGroupValidation, updateGroupCtrl);
+router.delete('/:id', deleteGroupCtrl);
+router.get('/:id/members', getGroupMembersCtrl);
+router.delete('/:id/members/:uid', removeGroupMemberCtrl);
+router.put('/:id/promote/:uid', promoteToAdminCtrl);
 
 module.exports = router;

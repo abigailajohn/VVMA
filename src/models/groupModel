@@ -1,0 +1,102 @@
+const db = require('../db/mysqldb');
+
+const getAllGroups = async () => {
+  const [rows] = await db.execute("SELECT id, name, description, max_members FROM `groups`");
+  return rows;
+};
+
+const getGroupById = async (groupId) => {
+  const [groups] = await db.execute("SELECT id, name, description, max_members FROM `groups` WHERE id = ?", [groupId]);
+  if (groups.length === 0) return null;
+  const group = groups[0];
+  const [members] = await db.execute(
+    "SELECT u.id, u.username, gm.role FROM users u JOIN group_members gm ON u.id = gm.user_id WHERE gm.group_id = ?",
+    [groupId]
+  );
+  return { ...group, members: members.map(member => ({ id: member.id, username: member.username, role: member.role })) };
+};
+
+const createGroup = async ({ name, description, maxMembers, creatorId }) => {
+  const [result] = await db.execute(
+    "INSERT INTO `groups` (name, description, max_members, creator_id) VALUES (?, ?, ?, ?)",
+    [name, description, maxMembers, creatorId]
+  );
+  const groupId = result.insertId;
+  await db.execute(
+    "INSERT INTO group_members (group_id, user_id, role) VALUES (?, ?, ?)",
+    [groupId, creatorId, 'admin']
+  );
+  return groupId;
+};
+
+const joinGroup = async (groupId, userId) => {
+  const [[group]] = await db.execute("SELECT max_members FROM `groups` WHERE id = ?", [groupId]);
+  if (!group) return { error: 'Group not found', status: 404 };
+  
+  const [[memberCount]] = await db.execute("SELECT COUNT(*) as count FROM group_members WHERE group_id = ?", [groupId]);
+  if (memberCount.count >= group.max_members) return { error: 'Group is full, join another.', status: 400 };
+  
+  const [[existingMember]] = await db.execute("SELECT 1 FROM group_members WHERE group_id = ? AND user_id = ?", [groupId, userId]);
+  if (existingMember) return { error: 'You are already a member of this group', status: 400 };
+  
+  await db.execute("INSERT INTO group_members (group_id, user_id, role) VALUES (?, ?, ?)", [groupId, userId, 'member']);
+  return { message: 'Successfully joined the group', status: 200 };
+};
+
+const updateGroup = async (groupId, { name, description, maxMembers }) => {
+  const [result] = await db.execute(
+    "UPDATE `groups` SET name = ?, description = ?, max_members = ? WHERE id = ?",
+    [name, description, maxMembers, groupId]
+  );
+  if (result.affectedRows === 0) return null;
+  return await getGroupById(groupId);
+};
+
+const deleteGroup = async (groupId, creatorId) => {
+  const [groups] = await db.execute("SELECT * FROM `groups` WHERE id = ? AND creator_id = ?", [groupId, creatorId]);
+  if (groups.length === 0) return { error: 'Not authorized to delete this group', status: 403 };
+  await db.execute("DELETE FROM `groups` WHERE id = ?", [groupId]);
+  return { message: 'Group deleted successfully', status: 200 };
+};
+
+const getGroupMembers = async (groupId, userId) => {
+  const [membership] = await db.execute("SELECT * FROM group_members WHERE group_id = ? AND user_id = ?", [groupId, userId]);
+  if (membership.length === 0) return { error: 'Not authorized to view members', status: 403 };
+  const [members] = await db.execute(
+    "SELECT u.id, u.username, gm.role FROM users u JOIN group_members gm ON u.id = gm.user_id WHERE gm.group_id = ?",
+    [groupId]
+  );
+  return members;
+};
+
+const removeGroupMember = async (groupId, memberIdToRemove) => {
+  const [groups] = await db.execute("SELECT creator_id FROM `groups` WHERE id = ?", [groupId]);
+  if (groups.length === 0) return { error: 'Group not found', status: 404 };
+  const group = groups[0];
+  if (String(memberIdToRemove) === String(group.creator_id)) return { error: "Cannot remove the group creator", status: 403 };
+  const [result] = await db.execute("DELETE FROM group_members WHERE group_id = ? AND user_id = ?", [groupId, memberIdToRemove]);
+  if (result.affectedRows === 0) return { error: 'Member not found in the group', status: 404 };
+  return { message: 'User removed from group successfully', status: 200 };
+};
+
+const promoteToAdmin = async (groupId, userIdToPromote, adminId) => {
+  const [admins] = await db.execute("SELECT * FROM group_members WHERE group_id = ? AND user_id = ? AND role = ?", [groupId, adminId, 'admin']);
+  if (admins.length === 0) return { error: 'Not authorized to promote members', status: 403 };
+  const [adminCount] = await db.execute("SELECT COUNT(*) as count FROM group_members WHERE group_id = ? AND role = ?", [groupId, 'admin']);
+  if (adminCount[0].count >= 3) return { error: 'Maximum number of admins reached', status: 400 };
+  const [result] = await db.execute("UPDATE group_members SET role = ? WHERE group_id = ? AND user_id = ?", ['admin', groupId, userIdToPromote]);
+  if (result.affectedRows === 0) return { error: 'User not found in group', status: 404 };
+  return { message: 'User promoted to admin successfully', status: 200 };
+};
+
+module.exports = {
+  getAllGroups,
+  getGroupById,
+  createGroup,
+  joinGroup,
+  updateGroup,
+  deleteGroup,
+  getGroupMembers,
+  removeGroupMember,
+  promoteToAdmin
+};

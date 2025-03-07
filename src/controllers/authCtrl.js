@@ -1,5 +1,7 @@
 const db = require('../db/mysqldb');
 const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
+dotenv.config();
 
 /**
  * @swagger
