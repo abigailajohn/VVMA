@@ -95,11 +95,9 @@ const joinGroup = async (groupId, userId) => {
   return { message: 'Successfully joined group', status: 200 };
 };
 
-// Join a group using an invite URL
 const joinGroupByInviteUrl = async (userId, inviteUrl) => {
   if (!inviteUrl) return { error: 'Invite URL is required', status: 400 };
 
-  // Fetch the URL content (for demonstration purposes)
   const response = await fetch(inviteUrl);
   const content = await response.text();
 
@@ -184,7 +182,6 @@ const deleteGroup = async (groupId, userId) => {
   return { message: 'Group deleted', status: 200 };
 };
 
-// Get members of a group (only for group members)
 const getGroupMembers = async (groupId, userId) => {
   const [membership] = await db.execute(
     'SELECT * FROM group_members WHERE group_id = ? AND user_id = ?',
