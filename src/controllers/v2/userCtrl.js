@@ -1,4 +1,9 @@
-const db = require('../../db/mysqldb');
+const { 
+  getMyProfileModel, 
+  getUserByIdModel, 
+  updateUserModel, 
+  deleteUserModel 
+} = require('../../models/userModel');
 const jwt = require('jsonwebtoken');
 
 /**
@@ -36,26 +41,11 @@ const jwt = require('jsonwebtoken');
 const getMyProfile = async (req, res) => {
   try {
     const userId = req.user.userId;
-    
-    const userQuery = "SELECT id, username, email, role, bio, created_at FROM users WHERE id = ?";
-    const [users] = await db.execute(userQuery, [userId]);
-    
-    if (users.length === 0) {
+    const profile = await getMyProfileModel(userId);
+    if (!profile) {
       return res.status(404).json({ error: 'User not found' });
     }
-    const user = users[0];
-    const groupsQuery = `
-      SELECT \`g\`.id, \`g\`.name, gm.role
-      FROM \`groups\` \`g\`
-      JOIN group_members gm ON \`g\`.id = gm.group_id
-      WHERE gm.user_id = ?
-    `;
-    const [groups] = await db.execute(groupsQuery, [userId]);
-
-    res.json({
-      ...user,
-      groups
-    });
+    res.json(profile);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -87,28 +77,13 @@ const getMyProfile = async (req, res) => {
  *       500:
  *         description: Internal server error.
  */
-
 const getUserById = async (req, res) => {
   try {
-    const { id } = req.params;
-    const userQuery = "SELECT id, username, email, role, bio, created_at FROM users WHERE id = ?";
-    const [users] = await db.execute(userQuery, [id]);
-
-    if (users.length === 0) {
+    const user = await getUserByIdModel(req.params.id);
+    if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    const user = users[0];
-    const groupsQuery = `
-      SELECT \`g\`.id, \`g\`.name, gm.role
-      FROM \`groups\` \`g\`
-      JOIN group_members gm ON \`g\`.id = gm.group_id
-      WHERE gm.user_id = ?
-    `;
-    const [groups] = await db.execute(groupsQuery, [id]);
-    res.json({
-      ...user,
-      groups
-    });
+    res.json(user);
   } catch (err) {
     console.error('Error in getUserById:', err);
     res.status(500).json({ error: err.message });
@@ -120,6 +95,7 @@ const getUserById = async (req, res) => {
  * /api/users/{id}:
  *   patch:
  *     summary: Update a user by ID
+ *     description: Updates specific user fields (username, email, and bio) 
  *     tags:
  *       - Users
  *     parameters:
@@ -135,30 +111,18 @@ const getUserById = async (req, res) => {
  *         application/json:
  *           schema:
  *             type: object
- *             description: The fields to update.
+ *             description: The fields to update. Only "username", "email", and "bio" are allowed.
  *     responses:
  *       200:
  *         description: User updated.
  *       500:
  *         description: Internal server error.
  */
-
 const updateUser = async (req, res) => {
   try {
-    const { id } = req.params;
-    const updates = req.body;
-    let setClause = '';
-    for (let key in updates) {
-      setClause += `${key} = '${updates[key]}', `;
-    }
-    setClause = setClause.slice(0, -2);
-    const query = `UPDATE users SET ${setClause} WHERE id = '${id}'`;
-    const [result] = await db.execute(query);
-    res.json({
-      message: 'User updated',
-      affectedRows: result.affectedRows,
-      updatedFields: updates,
-    });
+    const user = await updateUserModel(req.params.id, req.body);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ message: 'User updated successfully', user });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -184,15 +148,17 @@ const updateUser = async (req, res) => {
  *       500:
  *         description: Internal server error.
  */
-
 const deleteUser = async (req, res) => {
   try {
-    const { id } = req.params;
-    const query = "DELETE FROM users WHERE id = ?";
-    const [result] = await db.execute(query, [id]);
-    res.json({
-      message: 'User deleted',
-    });
+    if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+    if (req.user.userId !== Number(req.params.id) && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized to delete this user' });
+    }
+    const affectedRows = await deleteUserModel(req.params.id);
+    if (typeof affectedRows === "object" && affectedRows.error) {
+      return res.status(affectedRows.status).json({ error: affectedRows.error });
+    }
+    res.json({ message: 'User deleted successfully', affectedRows });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

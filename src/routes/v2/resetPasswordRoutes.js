@@ -1,9 +1,9 @@
 const express = require('express');
-const { resetPasswordV2, requestPasswordResetV2 } = require('../../controllers/v2/resetPasswordCtrl');
+const { requestPasswordResetV2Ctrl, resetPasswordV2Ctrl } = require("../../controllers/v2/resetPasswordCtrl");
 
 const router = express.Router();
 
-router.post('/reset-password', requestPasswordResetV2);
-router.post('/reset-password/verify', resetPasswordV2);
+router.post('/reset-password', requestPasswordResetV2Ctrl);
+router.post('/reset-password/verify', resetPasswordV2Ctrl);
 
 module.exports = router;

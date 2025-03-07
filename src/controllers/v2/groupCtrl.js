@@ -1,14 +1,16 @@
-const db = require('../../db/mysqldb');
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const fetch = require('node-fetch');
-
-function generateInviteCode() {
-    return crypto.randomBytes(8).toString('hex').toUpperCase('hex');
-}
-function createInviteUrl(inviteCode, baseUrl = process.env.BASE_URL) {	
-    return `${baseUrl}/join-group/${inviteCode}`;
-}
+const {
+    getAllGroups,
+    getGroupById,
+    createGroup,
+    joinGroup,
+    joinGroupByInviteUrl,
+    refreshGroupInvite,
+    updateGroup,
+    deleteGroup,
+    getGroupMembers,
+    removeGroupMember,
+    promoteToAdmin
+  } = require('../../models/groupModel');
 
 /**
  * @swagger
@@ -23,21 +25,14 @@ function createInviteUrl(inviteCode, baseUrl = process.env.BASE_URL) {
  *         description: Internal server error
  */
 
-const getAllGroups = async (req, res) => {
+const getAllGroupsCtrl = async (req, res) => {
     try {
-        const [groups] = await db.execute(  
-            'SELECT id, name, description, max_members, invite_code FROM `groups`'
-        ); 
-        const groupsWithInviteUrl = groups.map(group => ({
-            ...group,
-            inviteUrl: group.invite_code ? createInviteUrl(group.invite_code) : null
-        }));
-
-        res.json(groupsWithInviteUrl);
+      const groups = await getAllGroups();
+      res.json(groups);
     } catch (err) {
-        res.status(500).json({ error: err.message });
-      }
-};
+      res.status(500).json({ error: err.message });
+    }
+  };
 
 /**
  * @swagger
@@ -61,36 +56,15 @@ const getAllGroups = async (req, res) => {
  *         description: Internal server error
  */
 
-const getGroupById = async (req, res) => {
-    const groupId = req.params.id;
+const getGroupByIdCtrl = async (req, res) => {
     try {
-        const [groups] = await db.execute(
-            'SELECT id, name, description, max_members, invite_code FROM `groups` WHERE id = ?', 
-            [groupId]
-        );
-        if (groups.length === 0) {
-            return res.status(404).json({ error: 'Group not found' });
-        }
-        const group = groups[0];
-        const [members] = await db.execute(
-            'SELECT u.username, gm.role FROM users u JOIN group_members gm ON u.id = gm.user_id WHERE gm.group_id = ?',
-            [groupId]
-        );
-        const groupWithMembers = {
-            ...group,
-            inviteUrl: group.invite_code ? createInviteUrl(group.invite_code) : null,
-            members: members.map( member => ({ 
-                id: member.id, 
-                username: member.username, 
-                role: member.role
-            }))
-        };
-
-        res.json(groupWithMembers);
+      const group = await getGroupById(req.params.id);
+      if (!group) return res.status(404).json({ error: 'Group not found' });
+      res.json(group);
     } catch (err) {
-        res.status(500).json({ error: err.message });
-      }
-};
+      res.status(500).json({ error: err.message });
+    }
+  };
 
 /**
  * @swagger
@@ -123,38 +97,15 @@ const getGroupById = async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-const createGroup = async (req, res) => {
-    const { name, description, maxMembers } = req.body;
-    const creatorId = req.user.userId;
-
-    if (!name || !description || !maxMembers) {
-        return res.status(400).json({ error: 'Required fields are missing' });
-    }
-    
+const createGroupCtrl = async (req, res) => {
     try {
-        const inviteCode = generateInviteCode();
-        const [result] = await db.execute(
-            'INSERT INTO `groups` (name, description, max_members, creator_id, invite_code) VALUES (?, ?, ?, ?, ?)',
-            [name, description, maxMembers, creatorId, inviteCode]
-        );
-        await db.execute(
-            'INSERT INTO group_members (group_id, user_id, role) VALUES (?, ?, ?)',
-            [result.insertId, creatorId, 'admin']
-        );
-        const inviteUrl = createInviteUrl(inviteCode);
-        res.status(201).json({ 
-            id: result.insertId, 
-            name, 
-            description, 
-            maxMembers,
-            creatorId,
-            inviteCode,
-            inviteUrl
-        });
+      const creatorId = req.user.userId;
+      const newGroup = await createGroup({ ...req.body, creatorId });
+      res.status(201).json(newGroup);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+      res.status(500).json({ error: err.message });
     }
-}
+  };
 
 /**
  * @swagger
@@ -179,42 +130,15 @@ const createGroup = async (req, res) => {
  *         description: Internal server error
  */
 
-const joinGroup = async (req, res) => {
-    const userId = req.user.userId;
-    const groupId = req.params.id;
-
+const joinGroupCtrl = async (req, res) => {
     try {
-        const [[group]] = await db.execute(
-            'SELECT max_members FROM `groups` WHERE id = ?', 
-            [groupId]
-        );
-        if (!group) {
-            return res.status(404).json({ error: 'Group not found' });
-        }
-        const [[memberCount]] = await db.execute(
-            'SELECT COUNT(*) as count FROM group_members WHERE group_id = ?', 
-            [groupId]
-        );
-        if (memberCount.count >= group.max_members) {
-            return res.status(400).json({ error: 'Group is full, join another.' });
-        }
-        const [[existingMember]] = await db.execute(
-            'SELECT 1 FROM group_members WHERE group_id = ? AND user_id = ?',
-            [groupId, userId]
-        );
-        if (existingMember) {
-            return res.status(400).json({ error: "You're already in this group" });
-        }
-        await db.execute(
-            'INSERT INTO group_members (group_id, user_id, role) VALUES (?, ?, ?)', 
-            [groupId, userId, 'member']
-        );
-        
-        res.json({ message: 'Successfully joined group' });
+      const result = await joinGroup(req.params.id, req.user.userId);
+      if (result.error) return res.status(result.status).json({ error: result.error });
+      res.json(result);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+      res.status(500).json({ error: err.message });
     }
-};
+  };
 
 /**
  * @swagger
@@ -244,64 +168,15 @@ const joinGroup = async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-const joinGroupByInviteUrl = async (req, res) => {
-    const userId = req.user.userId;
-    const { inviteUrl } = req.body;
-
-    if (!inviteUrl) {
-        return res.status(400).json({ error: 'Invite URL is required' });
-    }
-
-    try {        
-        const response = await fetch(inviteUrl);
-        const content = await response.text();
-
-        if (inviteUrl.includes('/join-group/')) {
-            const urlParts = inviteUrl.split('/');
-            const inviteCode = urlParts[urlParts.length - 1];
-
-            if (!inviteCode) {
-                return res.status(400).json({ error: 'Invalid invite URL' });
-            }
-
-            const [groups] = await db.execute(
-                'SELECT id, max_members FROM `groups` WHERE invite_code = ?',
-                [inviteCode]
-            );
-            if (groups.length === 0) {
-                return res.status(404).json({ error: 'Invalid invite code or group not found' });
-            }
-
-            const group = groups[0];
-            const groupId = group.id;
-            const [[memberCount]] = await db.execute(
-                'SELECT COUNT(*) as count FROM group_members WHERE group_id = ?',
-                [groupId]
-            );
-            if (memberCount.count >= group.max_members) {
-                return res.status(400).json({ error: 'Group is full, join another' });
-            }
-
-            const [[existingMember]] = await db.execute(
-                'SELECT 1 FROM group_members WHERE group_id = ? AND user_id = ?',
-                [groupId, userId]
-            );
-            if (existingMember) {
-                return res.status(400).json({ error: "You're already in this group" });	
-            }
-            await db.execute(
-                'INSERT INTO group_members (group_id, user_id, role) VALUES (?, ?, ?)',
-                [groupId, userId, 'member']
-            );
-            return res.json({ message: 'Successfully joined group', groupId });
-        }
-        return res.json({
-            message: content
-        });
+const joinGroupByInviteUrlCtrl = async (req, res) => {
+    try {
+      const result = await joinGroupByInviteUrl(req.user.userId, req.body.inviteUrl);
+      if (result.error) return res.status(result.status).json({ error: result.error });
+      res.json(result);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+      res.status(500).json({ error: err.message });
     }
-};
+  };
 
 /**
  * @swagger
@@ -325,35 +200,14 @@ const joinGroupByInviteUrl = async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-const refreshGroupInvite = async (req, res) => {
-    const userId = req.user.userId;
-    const groupId = req.params.id;
-
-    try {
-        const [admins] = await db.execute(
-            'SELECT * FROM group_members WHERE group_id = ? AND user_id = ? AND role = ?',
-            [groupId, userId, 'admin']
-        );
-        if (admins.length === 0) {
-            return res.status(403).json({ error: 'Not authorized' });
-        }
-        const newInviteCode = generateInviteCode();
-        const [result] = await db.execute(
-            'UPDATE `groups` SET invite_code = ? WHERE id = ?',
-            [newInviteCode, groupId]
-        );
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'Group not found' });
-        }
-        const inviteUrl = createInviteUrl(newInviteCode);
-
-        res.json({ 
-            message: 'Invite code refreshed', 
-            inviteUrl
-        });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    };
+const refreshGroupInviteCtrl = async (req, res) => {
+  try {
+    const result = await refreshGroupInvite(req.params.id, req.user.userId);
+    if (result.error) return res.status(result.status).json({ error: result.error });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 
@@ -393,32 +247,15 @@ const refreshGroupInvite = async (req, res) => {
  *         description: Internal server error
  */
 
-const updateGroup = async (req, res) => {
-    const userId = req.user.userId;
-    const groupId = req.params.id;
-    const { name, description, maxMembers } = req.body;
-
+const updateGroupCtrl = async (req, res) => {
     try {
-        const [admins] = await db.execute(
-            'SELECT * FROM group_members WHERE group_id = ? AND user_id = ? AND role = ?',
-            [groupId, userId, 'admin']
-        );
-        if (admins.length === 0) {
-            return res.status(403).json({ error: 'Not authorized' });
-        }
-        const [result] = await db.execute(
-            'UPDATE `groups` SET name = ?, description = ?, max_members = ? WHERE id = ?',
-            [name, description, maxMembers, groupId]
-        );
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'Group not found' });
-        }
-
-        res.json({ message: 'Group updated' });
+      const result = await updateGroup(req.params.id, req.body, req.user.userId);
+      if (result.error) return res.status(result.status).json({ error: result.error });
+      res.json(result);
     } catch (err) {
-        res.status(500).json({ error: err.message });
-      }
-};
+      res.status(500).json({ error: err.message });
+    }
+  };
 
 /**
  * @swagger
@@ -443,25 +280,15 @@ const updateGroup = async (req, res) => {
  *         description: Internal server error
  */
 
-const deleteGroup = async (req, res) => {
-    const userId = req.user.userId;
-    const groupId = req.params.id;
-
+const deleteGroupCtrl = async (req, res) => {
     try {
-        const [groups] = await db.execute(
-            'SELECT * FROM `groups` WHERE id = ? AND creator_id = ?',
-            [groupId, userId]
-        );
-        if (groups.length === 0) {
-            return res.status(403).json({ error: 'Not authorized' });
-        }
-        await db.execute('DELETE FROM `groups` WHERE id = ?', [groupId]);
-
-        res.json({ message: 'Group deleted' });
+      const result = await deleteGroup(req.params.id, req.user.userId);
+      if (result.error) return res.status(result.status).json({ error: result.error });
+      res.json(result);
     } catch (err) {
-        res.status(500).json({ error: err.message });
-      }
-};
+      res.status(500).json({ error: err.message });
+    }
+  };
 
 /**
  * @swagger
@@ -486,28 +313,15 @@ const deleteGroup = async (req, res) => {
  *         description: Internal server error
  */
 
-const getGroupMembers = async (req, res) => {
-    const userId = req.user.userId;
-    const groupId = req.params.id;
- 
+const getGroupMembersCtrl = async (req, res) => {
     try {
-        const [membership] = await db.execute(
-            'SELECT * FROM group_members WHERE group_id = ? AND user_id = ?',
-            [groupId, userId]
-        );
-        if (membership.length === 0) {
-            return res.status(403).json({ error: 'Not authorized to view members' });
-        }
-        const [members] = await db.execute(
-            'SELECT u.id, u.username, gm.role FROM users u JOIN group_members gm ON u.id = gm.user_id WHERE gm.group_id = ?',
-            [groupId]
-        );
-
-        res.json(members);
+      const result = await getGroupMembers(req.params.id, req.user.userId);
+      if (result.error) return res.status(result.status).json({ error: result.error });
+      res.json(result);
     } catch (err) {
-        res.status(500).json({ error: err.message });
-      }
-};
+      res.status(500).json({ error: err.message });
+    }
+  };
 
 /**
  * @swagger
@@ -537,35 +351,15 @@ const getGroupMembers = async (req, res) => {
  *         description: Internal server error
  */
 
-const removeGroupMember = async (req, res) => {
-    const groupId = req.params.id;
-    const memberIdToRemove = req.params.uid;
-
+const removeGroupMemberCtrl = async (req, res) => {
     try {
-        const [groups] = await db.execute(
-            'SELECT creator_id FROM `groups` WHERE id = ?',
-            [groupId]
-        );
-        if (groups.length === 0) {
-            return res.status(404).json({ error: 'Group not found' });
-        }
-        const group = groups[0];
-        if (String(memberIdToRemove) === String(group.creator_id)) {
-            return res.status(403).json({ error: "You cannot remove the group creator" })
-        }
-        const [result] = await db.execute(
-            'DELETE FROM group_members WHERE group_id = ? AND user_id = ?',
-            [groupId, memberIdToRemove
-        ]);
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'Member not found in the group' });
-        }
-
-        res.json({ message: 'User removed from group' });
+      const result = await removeGroupMember(req.params.id, req.params.uid);
+      if (result.error) return res.status(result.status).json({ error: result.error });
+      res.json(result);
     } catch (err) {
-        res.status(500).json({ error: err.message });
-      }
-}
+      res.status(500).json({ error: err.message });
+    }
+  };
 
 /**
  * @swagger
@@ -597,49 +391,26 @@ const removeGroupMember = async (req, res) => {
  *         description: Internal server error
  */
 
-const promoteToAdmin = async (req, res) => {
-    const groupId = req.params.id;
-    const userIdToPromote = req.params.uid;
-    const adminId = req.user.userId;
-
+const promoteToAdminCtrl = async (req, res) => {
     try {
-        const [admins] = await db.execute(
-            'SELECT * FROM group_members WHERE group_id = ? AND user_id = ? AND role = ?',
-            [groupId, adminId, 'admin']
-        );
-        if (admins.length === 0) {
-            return res.status(403).json({ error: 'Not authorized' });
-        }
-        const [adminCount] = await db.execute(
-            'SELECT COUNT(*) as count FROM group_members WHERE group_id = ? AND role = ?',
-            [groupId, 'admin']
-        );
-        if (adminCount[0].count >= 3) {
-            return res.status(400).json({ error: 'Maximum number of admins reached' });
-        }
-        const [result] = await db.execute(
-            'UPDATE group_members SET role = ? WHERE group_id = ? AND user_id = ?',
-            ['admin', groupId, userIdToPromote]
-        );
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'User not found in group' });
-        }
-        res.json({ message: 'User is now an admin' });
+      const result = await promoteToAdmin(req.params.id, req.params.uid, req.user.userId);
+      if (result.error) return res.status(result.status).json({ error: result.error });
+      res.json(result);
     } catch (err) {
-        res.status(500).json({ error: err.message });
-      }
-};
-
-module.exports = {
-    getAllGroups,
-    getGroupById,
-    createGroup,
-    joinGroup,
-    joinGroupByInviteUrl,
-    refreshGroupInvite,
-    updateGroup,
-    deleteGroup,
-    getGroupMembers,
-    removeGroupMember,
-    promoteToAdmin
-};
+      res.status(500).json({ error: err.message });
+    }
+  };
+  
+  module.exports = {
+    getAllGroupsCtrl,
+    getGroupByIdCtrl,
+    createGroupCtrl,
+    joinGroupCtrl,
+    joinGroupByInviteUrlCtrl,
+    refreshGroupInviteCtrl,
+    updateGroupCtrl,
+    deleteGroupCtrl,
+    getGroupMembersCtrl,
+    removeGroupMemberCtrl,
+    promoteToAdminCtrl
+  };

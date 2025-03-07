@@ -1,0 +1,257 @@
+const db = require('../db/mysqldb');
+const crypto = require('crypto');
+const fetch = require('node-fetch');
+
+function generateInviteCode() {
+  return crypto.randomBytes(8).toString('hex').toUpperCase('hex');
+}
+
+function createInviteUrl(inviteCode, baseUrl = process.env.BASE_URL) {	
+  return `${baseUrl}/join-group/${inviteCode}`;
+}
+
+// Retrieve all groups with an invite URL
+const getAllGroups = async () => {
+  const [groups] = await db.execute(
+    'SELECT id, name, description, max_members, invite_code FROM `groups`'
+  ); 
+  const groupsWithInviteUrl = groups.map(group => ({
+    ...group,
+    inviteUrl: group.invite_code ? createInviteUrl(group.invite_code) : null
+  }));
+  return groupsWithInviteUrl;
+};
+
+// Get a group by its ID including its members and invite URL
+const getGroupById = async (groupId) => {
+  const [groups] = await db.execute(
+    'SELECT id, name, description, max_members, invite_code FROM `groups` WHERE id = ?', 
+    [groupId]
+  );
+  if (groups.length === 0) return null;
+  const group = groups[0];
+  const [members] = await db.execute(
+    'SELECT u.username, gm.role, u.id FROM users u JOIN group_members gm ON u.id = gm.user_id WHERE gm.group_id = ?',
+    [groupId]
+  );
+  return {
+    ...group,
+    inviteUrl: group.invite_code ? createInviteUrl(group.invite_code) : null,
+    members: members.map(member => ({
+      id: member.id,
+      username: member.username,
+      role: member.role
+    }))
+  };
+};
+
+// Create a new group, assign the creator as admin, and generate an invite code/URL
+const createGroup = async ({ name, description, maxMembers, creatorId }) => {
+  const inviteCode = generateInviteCode();
+  const [result] = await db.execute(
+    'INSERT INTO `groups` (name, description, max_members, creator_id, invite_code) VALUES (?, ?, ?, ?, ?)',
+    [name, description, maxMembers, creatorId, inviteCode]
+  );
+  await db.execute(
+    'INSERT INTO group_members (group_id, user_id, role) VALUES (?, ?, ?)',
+    [result.insertId, creatorId, 'admin']
+  );
+  const inviteUrl = createInviteUrl(inviteCode);
+  return {
+    id: result.insertId,
+    name,
+    description,
+    maxMembers,
+    creatorId,
+    inviteCode,
+    inviteUrl
+  };
+};
+
+// Join a group by ID
+const joinGroup = async (groupId, userId) => {
+  const [[group]] = await db.execute(
+    'SELECT max_members FROM `groups` WHERE id = ?', 
+    [groupId]
+  );
+  if (!group) return { error: 'Group not found', status: 404 };
+  
+  const [[memberCount]] = await db.execute(
+    'SELECT COUNT(*) as count FROM group_members WHERE group_id = ?', 
+    [groupId]
+  );
+  if (memberCount.count >= group.max_members) return { error: 'Group is full, join another.', status: 400 };
+  
+  const [[existingMember]] = await db.execute(
+    'SELECT 1 FROM group_members WHERE group_id = ? AND user_id = ?',
+    [groupId, userId]
+  );
+  if (existingMember) return { error: "You're already in this group", status: 400 };
+  
+  await db.execute(
+    'INSERT INTO group_members (group_id, user_id, role) VALUES (?, ?, ?)', 
+    [groupId, userId, 'member']
+  );
+  return { message: 'Successfully joined group', status: 200 };
+};
+
+// Join a group using an invite URL
+const joinGroupByInviteUrl = async (userId, inviteUrl) => {
+  if (!inviteUrl) return { error: 'Invite URL is required', status: 400 };
+
+  // Fetch the URL content (for demonstration purposes)
+  const response = await fetch(inviteUrl);
+  const content = await response.text();
+
+  if (inviteUrl.includes('/join-group/')) {
+    const urlParts = inviteUrl.split('/');
+    const inviteCode = urlParts[urlParts.length - 1];
+    if (!inviteCode) return { error: 'Invalid invite URL', status: 400 };
+
+    const [groups] = await db.execute(
+      'SELECT id, max_members FROM `groups` WHERE invite_code = ?',
+      [inviteCode]
+    );
+    if (groups.length === 0) return { error: 'Invalid invite code or group not found', status: 404 };
+
+    const group = groups[0];
+    const groupId = group.id;
+    const [[memberCount]] = await db.execute(
+      'SELECT COUNT(*) as count FROM group_members WHERE group_id = ?',
+      [groupId]
+    );
+    if (memberCount.count >= group.max_members) return { error: 'Group is full, join another', status: 400 };
+
+    const [[existingMember]] = await db.execute(
+      'SELECT 1 FROM group_members WHERE group_id = ? AND user_id = ?',
+      [groupId, userId]
+    );
+    if (existingMember) return { error: "You're already in this group", status: 400 };
+    
+    await db.execute(
+      'INSERT INTO group_members (group_id, user_id, role) VALUES (?, ?, ?)',
+      [groupId, userId, 'member']
+    );
+    return { message: 'Successfully joined group', groupId, status: 200 };
+  }
+  return { message: content, status: 200 };
+};
+
+// Refresh the invite code for a group (admin only)
+const refreshGroupInvite = async (groupId, userId) => {
+  const [admins] = await db.execute(
+    'SELECT * FROM group_members WHERE group_id = ? AND user_id = ? AND role = ?',
+    [groupId, userId, 'admin']
+  );
+  if (admins.length === 0) return { error: 'Not authorized', status: 403 };
+  
+  const newInviteCode = generateInviteCode();
+  const [result] = await db.execute(
+    'UPDATE `groups` SET invite_code = ? WHERE id = ?',
+    [newInviteCode, groupId]
+  );
+  if (result.affectedRows === 0) return { error: 'Group not found', status: 404 };
+  const inviteUrl = createInviteUrl(newInviteCode);
+  return { message: 'Invite code refreshed', inviteUrl, status: 200 };
+};
+
+// Update group details (admin only)
+const updateGroup = async (groupId, { name, description, maxMembers }, userId) => {
+  const [admins] = await db.execute(
+    'SELECT * FROM group_members WHERE group_id = ? AND user_id = ? AND role = ?',
+    [groupId, userId, 'admin']
+  );
+  if (admins.length === 0) return { error: 'Not authorized', status: 403 };
+  
+  const [result] = await db.execute(
+    'UPDATE `groups` SET name = ?, description = ?, max_members = ? WHERE id = ?',
+    [name, description, maxMembers, groupId]
+  );
+  if (result.affectedRows === 0) return { error: 'Group not found', status: 404 };
+  
+  return { message: 'Group updated', status: 200 };
+};
+
+// Delete a group (only by group creator)
+const deleteGroup = async (groupId, userId) => {
+  const [groups] = await db.execute(
+    'SELECT * FROM `groups` WHERE id = ? AND creator_id = ?',
+    [groupId, userId]
+  );
+  if (groups.length === 0) return { error: 'Not authorized', status: 403 };
+  
+  await db.execute('DELETE FROM `groups` WHERE id = ?', [groupId]);
+  return { message: 'Group deleted', status: 200 };
+};
+
+// Get members of a group (only for group members)
+const getGroupMembers = async (groupId, userId) => {
+  const [membership] = await db.execute(
+    'SELECT * FROM group_members WHERE group_id = ? AND user_id = ?',
+    [groupId, userId]
+  );
+  if (membership.length === 0) return { error: 'Not authorized to view members', status: 403 };
+  
+  const [members] = await db.execute(
+    'SELECT u.id, u.username, gm.role FROM users u JOIN group_members gm ON u.id = gm.user_id WHERE gm.group_id = ?',
+    [groupId]
+  );
+  return members;
+};
+
+// Remove a member from a group (admin only)
+const removeGroupMember = async (groupId, memberIdToRemove) => {
+  const [groups] = await db.execute(
+    'SELECT creator_id FROM `groups` WHERE id = ?',
+    [groupId]
+  );
+  if (groups.length === 0) return { error: 'Group not found', status: 404 };
+  
+  const group = groups[0];
+  if (String(memberIdToRemove) === String(group.creator_id)) return { error: "You cannot remove the group creator", status: 403 };
+  
+  const [result] = await db.execute(
+    'DELETE FROM group_members WHERE group_id = ? AND user_id = ?',
+    [groupId, memberIdToRemove]
+  );
+  if (result.affectedRows === 0) return { error: 'Member not found in the group', status: 404 };
+  
+  return { message: 'User removed from group', status: 200 };
+};
+
+// Promote a user to admin (admin only)
+const promoteToAdmin = async (groupId, userIdToPromote, adminId) => {
+  const [admins] = await db.execute(
+    'SELECT * FROM group_members WHERE group_id = ? AND user_id = ? AND role = ?',
+    [groupId, adminId, 'admin']
+  );
+  if (admins.length === 0) return { error: 'Not authorized to promote members', status: 403 };
+  
+  const [adminCount] = await db.execute(
+    'SELECT COUNT(*) as count FROM group_members WHERE group_id = ? AND role = ?',
+    [groupId, 'admin']
+  );
+  if (adminCount[0].count >= 3) return { error: 'Maximum number of admins reached', status: 400 };
+  
+  const [result] = await db.execute(
+    'UPDATE group_members SET role = ? WHERE group_id = ? AND user_id = ?',
+    ['admin', groupId, userIdToPromote]
+  );
+  if (result.affectedRows === 0) return { error: 'User not found in group', status: 404 };
+  
+  return { message: 'User is now an admin', status: 200 };
+};
+
+module.exports = {
+  getAllGroups,
+  getGroupById,
+  createGroup,
+  joinGroup,
+  joinGroupByInviteUrl,
+  refreshGroupInvite,
+  updateGroup,
+  deleteGroup,
+  getGroupMembers,
+  removeGroupMember,
+  promoteToAdmin
+};

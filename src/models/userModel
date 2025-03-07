@@ -1,0 +1,63 @@
+const db = require('../db/mysqldb.js');
+const jwt = require('jsonwebtoken');
+
+const getMyProfileModel = async (userId) => {
+  const userQuery = "SELECT id, username, email, role, bio, created_at FROM users WHERE id = ?";
+  const [users] = await db.execute(userQuery, [userId]);
+  if (users.length === 0) return null;
+  const user = users[0];
+  const groupsQuery = `
+      SELECT \`g\`.id, \`g\`.name, gm.role
+      FROM \`groups\` \`g\`
+      JOIN group_members gm ON \`g\`.id = gm.group_id
+      WHERE gm.user_id = ?
+    `;
+  const [groups] = await db.execute(groupsQuery, [userId]);
+  return { ...user, groups };
+};
+
+const getUserByIdModel = async (id) => {
+  const userQuery = "SELECT id, username, email, role, bio, created_at FROM users WHERE id = ?";
+  const [users] = await db.execute(userQuery, [id]);
+  if (users.length === 0) return null;
+  const user = users[0];
+  const groupsQuery = `
+      SELECT \`g\`.id, \`g\`.name, gm.role
+      FROM \`groups\` \`g\`
+      JOIN group_members gm ON \`g\`.id = gm.group_id
+      WHERE gm.user_id = ?
+    `;
+  const [groups] = await db.execute(groupsQuery, [id]);
+  return { ...user, groups };
+};
+
+const updateUserModel = async (id, { username, email, bio }) => {
+    const [existing] = await db.execute("SELECT id FROM users WHERE id = ?", [id]);
+    if (existing.length === 0) return null;
+    
+    await db.execute(
+      "UPDATE users SET username = ?, email = ?, bio = ? WHERE id = ?",
+      [username, email, bio, id]
+    );
+   
+    const [rows] = await db.execute(
+      "SELECT id, username, email, role, bio, created_at FROM users WHERE id = ?",
+      [id]
+    );
+    return rows[0];
+  };
+
+const deleteUserModel = async (id) => {
+    const [users] = await db.execute("SELECT * FROM users WHERE id = ?", [id]);
+    if (users.length === 0) return { error: "User not found", status: 404 };
+    
+    const [result] = await db.execute("DELETE FROM users WHERE id = ?", [id]);
+    return result.affectedRows;
+  };
+
+module.exports = {
+  getMyProfileModel,
+  getUserByIdModel,
+  updateUserModel,
+  deleteUserModel
+};
