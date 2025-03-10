@@ -6,9 +6,9 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'User Management API',
+      title: 'vManagement API',
       version: '1.0.0',
-      description: 'A simple User Management API with Swagger documentation',
+      description: 'A simple Vulnerable Management API',
     },
     components: {
       securitySchemes: {

@@ -1,0 +1,762 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "title": "Vulnerable Management API",
+      "version": "1.0.0",
+      "description": "A simple User Management API with Swagger documentation"
+    },
+    "servers": [
+      {
+        "url": "http://localhost:3000"
+      }
+    ],
+    "components": {
+      "securitySchemes": {
+        "bearerAuth": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "JWT"
+        }
+      }
+    },
+    "security": [
+      {
+        "bearerAuth": []
+      }
+    ],
+    "paths": {
+      "/api/auth/register": {
+        "post": {
+          "summary": "Register",
+          "tags": [
+            "Auth"
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "username": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "password": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "User a registered"
+            },
+            "400": {
+              "description": "Invalid input"
+            }
+          }
+        }
+      },
+      "/api/auth/login": {
+        "post": {
+          "summary": "Login",
+          "tags": [
+            "Auth"
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "email",
+                    "password"
+                  ],
+                  "properties": {
+                    "email": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "password": {
+                      "type": "string",
+                      "format": "password"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Login successful",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "token": {
+                        "type": "string"
+                      },
+                      "user": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "role": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Invalid credentials"
+            },
+            "500": {
+              "description": "Internal server error"
+            }
+          }
+        }
+      },
+      "/api/groups": {
+        "get": {
+          "summary": "Retrieve all groups",
+          "tags": [
+            "Groups"
+          ],
+          "responses": {
+            "200": {
+              "description": "List of all groups"
+            },
+            "500": {
+              "description": "Internal server error"
+            }
+          }
+        },
+        "post": {
+          "summary": "Create a new group",
+          "tags": [
+            "Groups"
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "description",
+                    "maxMembers"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "maxMembers": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Group created"
+            },
+            "400": {
+              "description": "Invalid input"
+            },
+            "500": {
+              "description": "Internal server error"
+            }
+          }
+        }
+      },
+      "/api/groups/{id}": {
+        "get": {
+          "summary": "Get a group by ID",
+          "tags": [
+            "Groups"
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              },
+              "description": "The group ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Retrieved group details"
+            },
+            "404": {
+              "description": "Group not found"
+            },
+            "500": {
+              "description": "Internal server error"
+            }
+          }
+        },
+        "patch": {
+          "summary": "Update a group by ID",
+          "tags": [
+            "Groups"
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "maxMembers": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Group updated"
+            },
+            "403": {
+              "description": "Not authorized"
+            },
+            "404": {
+              "description": "Group not found"
+            },
+            "500": {
+              "description": "Internal server error"
+            }
+          }
+        },
+        "delete": {
+          "summary": "Delete a group by ID",
+          "tags": [
+            "Groups"
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Group deleted"
+            },
+            "403": {
+              "description": "Not authorized"
+            },
+            "404": {
+              "description": "Group not found"
+            },
+            "500": {
+              "description": "Internal server error"
+            }
+          }
+        }
+      },
+      "/api/groups/{id}/join": {
+        "post": {
+          "summary": "Join a group by ID",
+          "tags": [
+            "Groups"
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successfully joined group"
+            },
+            "400": {
+              "description": "Group is full"
+            },
+            "404": {
+              "description": "Group not found"
+            },
+            "500": {
+              "description": "Internal server error"
+            }
+          }
+        }
+      },
+      "/api/groups/join-by-invite": {
+        "post": {
+          "summary": "Join a group using an invite URL",
+          "tags": [
+            "Groups"
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "inviteUrl"
+                  ],
+                  "properties": {
+                    "inviteUrl": {
+                      "type": "string",
+                      "description": "The invite URL for the group"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Successfully joined group"
+            },
+            "400": {
+              "description": "Invalid invite URL or group is full"
+            },
+            "404": {
+              "description": "Group not found"
+            },
+            "500": {
+              "description": "Internal server error"
+            }
+          }
+        }
+      },
+      "/api/groups/{id}/refresh-invite": {
+        "post": {
+          "summary": "Refresh the invite code for a group",
+          "tags": [
+            "Groups"
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "New invite URL generated"
+            },
+            "403": {
+              "description": "Not authorized"
+            },
+            "404": {
+              "description": "Group not found"
+            },
+            "500": {
+              "description": "Internal server error"
+            }
+          }
+        }
+      },
+      "/api/groups/{id}/members": {
+        "get": {
+          "summary": "Get members of a group",
+          "tags": [
+            "Groups"
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of group members"
+            },
+            "403": {
+              "description": "Not authorized to view members"
+            },
+            "404": {
+              "description": "Group not found"
+            },
+            "500": {
+              "description": "Internal server error"
+            }
+          }
+        }
+      },
+      "/api/groups/{group_id}/members/{user_id}": {
+        "delete": {
+          "summary": "Remove a member from a group",
+          "tags": [
+            "Groups"
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "group_id",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            },
+            {
+              "in": "path",
+              "name": "user_id",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "User removed"
+            },
+            "403": {
+              "description": "Not authorized"
+            },
+            "404": {
+              "description": "Group or user not found"
+            },
+            "500": {
+              "description": "Internal server error"
+            }
+          }
+        }
+      },
+      "/api/groups/{group_id}/promote/{user_id}": {
+        "put": {
+          "summary": "Promote a user to admin",
+          "tags": [
+            "Groups"
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "group_id",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            },
+            {
+              "in": "path",
+              "name": "user_id",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "User promoted to admin"
+            },
+            "400": {
+              "description": "Maximum number of admins reached"
+            },
+            "403": {
+              "description": "Not authorized"
+            },
+            "404": {
+              "description": "Group or user not found"
+            },
+            "500": {
+              "description": "Internal server error"
+            }
+          }
+        }
+      },
+      "/api/v2/auth/reset-password": {
+        "post": {
+          "summary": "Request a password reset OTP",
+          "tags": [
+            "Password Reset"
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "email"
+                  ],
+                  "properties": {
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "example": "user@example.com"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OTP successfully sent"
+            },
+            "400": {
+              "description": "Invalid request"
+            },
+            "500": {
+              "description": "Internal server error"
+            }
+          }
+        }
+      },
+      "/api/v2/auth/reset-password/verify": {
+        "post": {
+          "summary": "Reset password using OTP",
+          "tags": [
+            "Password Reset"
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "email",
+                    "otp",
+                    "newPassword"
+                  ],
+                  "properties": {
+                    "email": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "otp": {
+                      "type": "string"
+                    },
+                    "newPassword": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Password reset successful"
+            },
+            "400": {
+              "description": "Invalid OTP or email"
+            },
+            "500": {
+              "description": "Internal server error"
+            }
+          }
+        }
+      },
+      "/api/users/me": {
+        "get": {
+          "summary": "Get the profile of the currently authenticated user",
+          "tags": [
+            "Users"
+          ],
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "User profile information",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "username": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string"
+                      },
+                      "role": {
+                        "type": "string"
+                      },
+                      "bio": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Not authenticated or invalid token"
+            },
+            "500": {
+              "description": "Internal server error"
+            }
+          }
+        }
+      },
+      "/api/users/{id}": {
+        "get": {
+          "summary": "Retrieve a user by ID",
+          "tags": [
+            "Users"
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "The unique ID of the user."
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "A user object.",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "User not found."
+            },
+            "500": {
+              "description": "Internal server error."
+            }
+          }
+        },
+        "patch": {
+          "summary": "Update a user by ID",
+          "description": "Updates specific user fields (username, email, and bio)",
+          "tags": [
+            "Users"
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "The ID of the user to update."
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "The fields to update. Only \"username\", \"email\", and \"bio\" are allowed."
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "User updated."
+            },
+            "500": {
+              "description": "Internal server error."
+            }
+          }
+        },
+        "delete": {
+          "summary": "Delete a user by ID",
+          "tags": [
+            "Users"
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "The ID of the user to delete."
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "User deleted."
+            },
+            "500": {
+              "description": "Internal server error."
+            }
+          }
+        }
+      }
+    },
+    "tags": []
+  }
+  

@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - mailhog
+    environment:
+      NODE_ENV: development
+      DB_HOST: db
+      DB_USER: usermanage
+      DB_PASSWORD: Llamasdove404
+      DB_NAME: user_management
+      MAILHOG_HOST: mailhog
+      MAILHOG_PORT: 1025
+
+  db:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: Llamasdove404
+      MYSQL_DATABASE: user_management
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./src/db/init.sql:/docker-entrypoint-initdb.d/init.sql  # Load pre-populated database
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mailhog:
+    image: mailhog/mailhog
+    restart: always
+    ports:
+      - "1025:1025"  
+      - "8025:8025"  
+      
+volumes:
+  mysql_data:

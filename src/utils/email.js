@@ -1,7 +1,7 @@
 const nodemailer = require("nodemailer")
 
 const transporter = nodemailer.createTransport({
-  host: "localhost",
+  host: "mailhog",
   port: 1025, 
   secure: false,
   auth: null,
@@ -29,7 +29,7 @@ const sendOTPEmail = async (email, otp) => {
       `,
     }
 
-    const info = await transporter.sendMail(mailOptions)
+    await transporter.sendMail(mailOptions)
     return true
   } catch (error) {
     return false
