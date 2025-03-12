@@ -42,16 +42,14 @@ VVMA is a valuable resource for improving API security skills through hands-on p
 ## Installation & Setup
 
 ### Run using Docker Compose (Recommended)
-This method runs the API in a containerized environment.
-
 Prerequisites
 - Docker
 - Docker compose
 
 - Clone the repository
 ```bash
-git clone https://github.com/abigailajohn/user_management_api.git
-cd user_management_api
+git clone https://github.com/abigailajohn/VVMA.git
+cd VVMA
 ```
 
 - Start the services
