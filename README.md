@@ -1,4 +1,8 @@
 # VVMA
+<p align="center">
+<img src="vvma.png" >
+</p>
+
 Very Vulnerable Management API (VVMA) is an intentionally vulnerable RESTful API built with Node.js for educational and testing purposes. It is designed to help security professionals, developers, and learners understand and mitigate common API security risks. 
 This API intentionally includes vulnerabilities from the OWASP Top 10 API Security Risks, allowing users to explore and test security flaws in user and group management systems.
 
