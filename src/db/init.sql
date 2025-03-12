@@ -1,4 +1,4 @@
-CREATE USER IF NOT EXISTS 'usermanage'@'%' IDENTIFIED WITH caching_sha2_password BY 'Llamasdove404';
+CREATE USER IF NOT EXISTS 'usermanage'@'%' IDENTIFIED BY 'Llamasdove404';
 GRANT ALL PRIVILEGES ON user_management.* TO 'usermanage'@'%';
 FLUSH PRIVILEGES;
 
