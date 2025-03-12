@@ -1,30 +1,49 @@
-# Vulnerable Management API
+# VVMA
+Very Vulnerable Management API
 
-## Overview
-The User Management API provides endpoints for managing users and groups, including authentication, password recovery, and group functionalities.
+VVMA is an intentionally vulnerable RESTful API built with Node.js for educational and testing purposes. It is designed to help security professionals, developers, and learners understand and mitigate common API security risks. 
+This API intentionally includes vulnerabilities from the OWASP Top 10 API Security Risks, allowing users to explore and test security flaws in user and group management systems.
+
+VVMA is a valuable resource for improving API security skills through hands-on practice and code analysis.
 
 ## Features
-### User Management
+### User Endpoints:
+- Create a new user
+- Retrieve user details
+- Update user information
+- Delete a user
 
-    Create a new user
-    Retrieve user details
-    Update user information
-    Delete a user
-    Forgot Password
-    Verify OTP
+### Group Endpoints:
+- List all groups
+- Retrieve a group by ID (with its members and invite URL)
+- Create a new group (with an invite code generation)
+- Join groups (by ID or via invite URL)
+- Refresh group invite codes
+- Update group details (admin only)
+- Delete a group (creator only)
+- Manage group membership (remove/promote)
 
-### Group Management
+### Password Reset Endpoints:
+- Request password reset
+- Verify OTP
 
-    Create a group
-    Retrieve group details
-    Update group information
-    Delete a group
-    Retreive members of a group
-    Delete a group member
-    Join a group by ID
-    Join a group by invite URL
-    Refresh group invite code
+- v1: Lacks rate limiting
+- v2: Implements rate limiting to mitigate brute-force attempts.
 
+## List of Vulnerabilities
+- Weak Password Policy
+- Broken Object Level Authorization (BOLA)
+- Broken Function Level Authorization (BFLA)
+- Weak JWT Implementation
+- Broken Object Property Level Authorization (BOPLA)
+- SQL Injection
+- Broken Authentication
+- Weak Secret Key
+- Server-Side Request Forgery (SSRF)
+- Improper Inventory Management 
+- No Rate Limiting 
+- Email Enumeration
+- Plaintext Password Storage
 
 ## Installation & Setup
 
@@ -35,6 +54,20 @@ Ensure you have the following installed on your system:
 - Node.js
 - MySQL
 - MailHog (for email testing)
+
+### Run Using Docker
+If you prefer running the API without Docker Compose, you can use the pre-built Docker image:
+
+- Clone the repository
+```bash
+git clone https://github.com/abigailajohn/user_management_api.git
+cd user_management_api
+```
+
+- Start the services
+```bash
+docker run -p 3000:3000 abigaila11/vvma 
+```
 
 ### Running with Docker Compose
 This method runs the API in a containerized environment.
@@ -47,7 +80,7 @@ cd user_management_api
 
 - Start the services
 ```bash
-sudo docker-compose up --build -d 
+docker-compose up --build -d 
 ```
 This will start the API, database, and MailHog.
 
@@ -65,12 +98,8 @@ MailHog UI: http://localhost:8025
 
 - Stop services when done:
 ```bash
-sudo docker-compose down
+docker-compose down
 ```
-
-
-### Run Using Docker
-
 
 ### Running Locally
 If you prefer running the API without Docker, follow these steps:
@@ -84,6 +113,7 @@ cd user_management_api
 ```bash
 npm install
 ```
+
 - Set up the database:
 Start MySQL and create a database.
 Import the database schema
@@ -110,8 +140,8 @@ OR
 node app.js
 ```
 
-## Endpoints
-
+### ⚠️ Disclaimer
+This API is intentionally vulnerable and is meant solely for educational and testing purposes. Do not deploy this code in a production environment. The vulnerabilities demonstrated here are examples of what to avoid in secure coding practices.
 
 ## License
-This project is licensed under the MIT License.
+This project is released under the MIT License.
