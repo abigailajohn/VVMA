@@ -1,7 +1,8 @@
 {
 	"info": {
-		"_postman_id": "165b915b-6b26-46c6-a285-4d3ddccd57bf",
+		"_postman_id": "f40e1836-e34c-4119-9636-83451863c236",
 		"name": "VVMA",
+		"description": "Very Vulnerable Management API (VVMA) is a deliberately insecure RESTful API built with Node.js for educational and testing purposes. It includes vulnerabilities from the OWASP Top 10, allowing developers and security professionals to explore and understand common API security flaws. Through hands-on practice and code analysis, users can improve their secure coding skills.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "25725352"
 	},
@@ -18,6 +19,9 @@
 								{
 									"name": "Create User",
 									"request": {
+										"auth": {
+											"type": "noauth"
+										},
 										"method": "POST",
 										"header": [
 											{
@@ -53,152 +57,10 @@
 										},
 										"description": "Generated from cURL: curl -X 'POST' \\\r\n  'http://localhost:3000/api/auth/register' \\\r\n  -H 'accept: */*' \\\r\n  -H 'Content-Type: application/json' \\\r\n  -d '{\r\n  \"username\": \"string\",\r\n  \"email\": \"string\",\r\n  \"password\": \"string\"\r\n}'"
 									},
-									"response": [
-										{
-											"name": "http://localhost:3000/api/auth/register",
-											"originalRequest": {
-												"method": "POST",
-												"header": [
-													{
-														"key": "accept",
-														"value": "*/*"
-													},
-													{
-														"key": "Content-Type",
-														"value": "application/json"
-													}
-												],
-												"body": {
-													"mode": "raw",
-													"raw": "{\r\n  \"username\": \"sunny\",\r\n  \"email\": \"sunnyyyy@test.com\",\r\n  \"password\": \"sunnyday$$@@\",\r\n  \"bio\":\"Cat Lover\"\r\n}",
-													"options": {
-														"raw": {
-															"language": "json"
-														}
-													}
-												},
-												"url": {
-													"raw": "http://localhost:3000/api/auth/register",
-													"protocol": "http",
-													"host": [
-														"localhost"
-													],
-													"port": "3000",
-													"path": [
-														"api",
-														"auth",
-														"register"
-													]
-												}
-											},
-											"status": "Created",
-											"code": 201,
-											"_postman_previewlanguage": "json",
-											"header": [
-												{
-													"key": "X-Powered-By",
-													"value": "Express"
-												},
-												{
-													"key": "Content-Type",
-													"value": "application/json; charset=utf-8"
-												},
-												{
-													"key": "Content-Length",
-													"value": "114"
-												},
-												{
-													"key": "ETag",
-													"value": "W/\"72-GQXUW/zZ7DrJ64jGKstSDg+UyIg\""
-												},
-												{
-													"key": "Date",
-													"value": "Wed, 05 Mar 2025 10:32:37 GMT"
-												},
-												{
-													"key": "Connection",
-													"value": "keep-alive"
-												},
-												{
-													"key": "Keep-Alive",
-													"value": "timeout=5"
-												}
-											],
-											"cookie": [],
-											"body": "{\n    \"id\": 31,\n    \"username\": \"sunny\",\n    \"email\": \"sunnyyyy@test.com\",\n    \"password\": \"sunnyday$$@@\",\n    \"role\": \"user\",\n    \"bio\": \"Cat Lover\"\n}"
-										},
-										{
-											"name": "http://localhost:3000/api/auth/register",
-											"originalRequest": {
-												"method": "POST",
-												"header": [
-													{
-														"key": "accept",
-														"value": "*/*"
-													},
-													{
-														"key": "Content-Type",
-														"value": "application/json"
-													}
-												],
-												"body": {
-													"mode": "raw",
-													"raw": "{\r\n  \"username\": \"sunny\",\r\n  \"email\": \"sunnyyyy@test.com\",\r\n  \"password\": \"sunnyday$$@@\",\r\n  \"bio\":\"Cat Lover\"\r\n}",
-													"options": {
-														"raw": {
-															"language": "json"
-														}
-													}
-												},
-												"url": {
-													"raw": "http://localhost:3000/api/auth/register",
-													"protocol": "http",
-													"host": [
-														"localhost"
-													],
-													"port": "3000",
-													"path": [
-														"api",
-														"auth",
-														"register"
-													]
-												}
-											},
-											"status": "Internal Server Error",
-											"code": 500,
-											"_postman_previewlanguage": "json",
-											"header": [
-												{
-													"key": "X-Powered-By",
-													"value": "Express"
-												},
-												{
-													"key": "Content-Type",
-													"value": "application/json; charset=utf-8"
-												},
-												{
-													"key": "Content-Length",
-													"value": "69"
-												},
-												{
-													"key": "ETag",
-													"value": "W/\"45-8Ax81ftgxO9uxlEPDjYhwSYBdlY\""
-												},
-												{
-													"key": "Date",
-													"value": "Wed, 05 Mar 2025 12:10:25 GMT"
-												},
-												{
-													"key": "Connection",
-													"value": "close"
-												}
-											],
-											"cookie": [],
-											"body": "{\n    \"error\": \"Duplicate entry 'sunnyyyy@test.com' for key 'users.email'\"\n}"
-										}
-									]
+									"response": []
 								}
-							]
+							],
+							"description": "register a new user"
 						},
 						{
 							"name": "login",
@@ -206,6 +68,16 @@
 								{
 									"name": "Get Auth Token",
 									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "",
+													"type": "string"
+												}
+											]
+										},
 										"method": "POST",
 										"header": [
 											{
@@ -313,7 +185,8 @@
 										}
 									]
 								}
-							]
+							],
+							"description": "Login with valid credentials"
 						}
 					]
 				}
@@ -325,6 +198,16 @@
 				{
 					"name": "User by ID",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
 						"header": [
 							{
@@ -333,7 +216,7 @@
 							}
 						],
 						"url": {
-							"raw": "http://localhost:3000/api/users/1",
+							"raw": "http://localhost:3000/api/users/{id}",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -342,7 +225,7 @@
 							"path": [
 								"api",
 								"users",
-								"1"
+								"{id}"
 							]
 						},
 						"description": "Generated from cURL: curl -X 'GET' \\\r\n  'http://localhost:3000/api/users/1' \\\r\n  -H 'accept: application/json'"
@@ -352,6 +235,16 @@
 				{
 					"name": "Update User",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
 						"method": "PATCH",
 						"header": [
 							{
@@ -373,7 +266,7 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:3000/api/users/2",
+							"raw": "http://localhost:3000/api/users/{id}",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -382,7 +275,7 @@
 							"path": [
 								"api",
 								"users",
-								"2"
+								"{id}"
 							]
 						},
 						"description": "Generated from cURL: curl -X 'PATCH' \\\r\n  'http://localhost:3000/api/users/2' \\\r\n  -H 'accept: */*' \\\r\n  -H 'Content-Type: application/json' \\\r\n  -d '{}'"
@@ -419,6 +312,16 @@
 				{
 					"name": "Delete User",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
 						"method": "DELETE",
 						"header": [
 							{
@@ -427,7 +330,7 @@
 							}
 						],
 						"url": {
-							"raw": "http://localhost:3000/api/users/33",
+							"raw": "http://localhost:3000/api/users/{id}",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -436,14 +339,15 @@
 							"path": [
 								"api",
 								"users",
-								"33"
+								"{id}"
 							]
 						},
 						"description": "Generated from cURL: curl -X 'DELETE' \\\r\n  'http://localhost:3000/api/users/33' \\\r\n  -H 'accept: */*'"
 					},
 					"response": []
 				}
-			]
+			],
+			"description": "Retrieve users by ID, update user details, and delete users as needed"
 		},
 		{
 			"name": "Groups",
@@ -454,6 +358,16 @@
 						{
 							"name": "Join by invite",
 							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
 								"method": "POST",
 								"header": [
 									{
@@ -494,6 +408,16 @@
 						{
 							"name": "Join by ID",
 							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
 								"method": "POST",
 								"header": [
 									{
@@ -502,7 +426,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://localhost:3000/api/groups/1/join",
+									"raw": "http://localhost:3000/api/groups/{id}/join",
 									"protocol": "http",
 									"host": [
 										"localhost"
@@ -511,7 +435,7 @@
 									"path": [
 										"api",
 										"groups",
-										"1",
+										"{id}",
 										"join"
 									]
 								},
@@ -527,6 +451,16 @@
 						{
 							"name": "Refresh-invite",
 							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
 								"method": "POST",
 								"header": [
 									{
@@ -535,7 +469,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://localhost:3000/api/groups/1/refresh-invite",
+									"raw": "http://localhost:3000/api/groups/{id}/refresh-invite",
 									"protocol": "http",
 									"host": [
 										"localhost"
@@ -544,7 +478,7 @@
 									"path": [
 										"api",
 										"groups",
-										"1",
+										"{id}",
 										"refresh-invite"
 									]
 								},
@@ -552,7 +486,8 @@
 							},
 							"response": []
 						}
-					]
+					],
+					"description": "refresh a group invite code"
 				},
 				{
 					"name": "members",
@@ -560,6 +495,16 @@
 						{
 							"name": "Get members",
 							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
 								"method": "GET",
 								"header": [
 									{
@@ -568,7 +513,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://localhost:3000/api/groups/1/members",
+									"raw": "http://localhost:3000/api/groups/{id}/members",
 									"protocol": "http",
 									"host": [
 										"localhost"
@@ -577,7 +522,7 @@
 									"path": [
 										"api",
 										"groups",
-										"1",
+										"{id}",
 										"members"
 									]
 								},
@@ -588,6 +533,16 @@
 						{
 							"name": "Delete members",
 							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
 								"method": "DELETE",
 								"header": [
 									{
@@ -622,6 +577,16 @@
 						{
 							"name": "Promote members",
 							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
 								"method": "PUT",
 								"header": [
 									{
@@ -648,11 +613,22 @@
 							},
 							"response": []
 						}
-					]
+					],
+					"description": "Make a group member an admin of a group"
 				},
 				{
 					"name": "Create Group",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [
 							{
@@ -692,6 +668,16 @@
 				{
 					"name": "Get Groups",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
 						"header": [
 							{
@@ -718,6 +704,16 @@
 				{
 					"name": "Get Group by ID",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
 						"header": [
 							{
@@ -726,7 +722,7 @@
 							}
 						],
 						"url": {
-							"raw": "http://localhost:3000/api/groups/2",
+							"raw": "http://localhost:3000/api/groups/{id}",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -735,7 +731,7 @@
 							"path": [
 								"api",
 								"groups",
-								"2"
+								"{id}"
 							]
 						},
 						"description": "Generated from cURL: curl -X 'GET' \\\r\n  'http://localhost:3000/api/groups/2' \\\r\n  -H 'accept: */*'"
@@ -745,6 +741,16 @@
 				{
 					"name": "Update Group",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
 						"method": "PATCH",
 						"header": [
 							{
@@ -766,7 +772,7 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:3000/api/groups/2",
+							"raw": "http://localhost:3000/api/groups/{id}",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -775,7 +781,7 @@
 							"path": [
 								"api",
 								"groups",
-								"2"
+								"{id}"
 							]
 						},
 						"description": "Generated from cURL: curl -X 'PATCH' \\\r\n  'http://localhost:3000/api/groups/2' \\\r\n  -H 'accept: */*' \\\r\n  -H 'Content-Type: application/json' \\\r\n  -d '{\r\n  \"name\": \"string\",\r\n  \"description\": \"string\",\r\n  \"maxMembers\": 0\r\n}'"
@@ -785,6 +791,16 @@
 				{
 					"name": "Delete Group",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
 						"method": "DELETE",
 						"header": [
 							{
@@ -793,7 +809,7 @@
 							}
 						],
 						"url": {
-							"raw": "http://localhost:3000/api/groups/3",
+							"raw": "http://localhost:3000/api/groups/{id}",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -802,14 +818,15 @@
 							"path": [
 								"api",
 								"groups",
-								"3"
+								"{id}"
 							]
 						},
 						"description": "Generated from cURL: curl -X 'DELETE' \\\r\n  'http://localhost:3000/api/groups/3' \\\r\n  -H 'accept: */*'"
 					},
 					"response": []
 				}
-			]
+			],
+			"description": "Create a group, get an invite code generated, and manage user memberships. As the creator, you can promote members to admins, with a maximum of three admins per group."
 		},
 		{
 			"name": "Reset Password",
@@ -861,7 +878,8 @@
 									},
 									"response": []
 								}
-							]
+							],
+							"description": "forgot password"
 						},
 						{
 							"name": "verify OTP",
@@ -908,7 +926,8 @@
 									},
 									"response": []
 								}
-							]
+							],
+							"description": "verify OTP and create new password in v2"
 						}
 					]
 				}

@@ -27,7 +27,7 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./src/db/init.sql:/docker-entrypoint-initdb.d/init.sql  # Load pre-populated database
+      - ./src/db/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - default
     healthcheck:

@@ -11,7 +11,7 @@ app.use(express.json());
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 app.get('/', (req, res) => {
-  res.send('Hello, Swagger!');
+  res.send('Welcome to the Very Vulnerable Management API!');
 });
 
 app.use('/api', routes);

@@ -1,7 +1,5 @@
 # VVMA
-Very Vulnerable Management API
-
-VVMA is an intentionally vulnerable RESTful API built with Node.js for educational and testing purposes. It is designed to help security professionals, developers, and learners understand and mitigate common API security risks. 
+Very Vulnerable Management API (VVMA) is an intentionally vulnerable RESTful API built with Node.js for educational and testing purposes. It is designed to help security professionals, developers, and learners understand and mitigate common API security risks. 
 This API intentionally includes vulnerabilities from the OWASP Top 10 API Security Risks, allowing users to explore and test security flaws in user and group management systems.
 
 VVMA is a valuable resource for improving API security skills through hands-on practice and code analysis.
@@ -27,9 +25,6 @@ VVMA is a valuable resource for improving API security skills through hands-on p
 - Request password reset
 - Verify OTP
 
-- v1: Lacks rate limiting
-- v2: Implements rate limiting to mitigate brute-force attempts.
-
 ## List of Vulnerabilities
 - Weak Password Policy
 - Broken Object Level Authorization (BOLA)
@@ -37,40 +32,21 @@ VVMA is a valuable resource for improving API security skills through hands-on p
 - Weak JWT Implementation
 - Broken Object Property Level Authorization (BOPLA)
 - SQL Injection
-- Broken Authentication
 - Weak Secret Key
+- Email Enumeration
 - Server-Side Request Forgery (SSRF)
 - Improper Inventory Management 
 - No Rate Limiting 
-- Email Enumeration
 - Plaintext Password Storage
 
 ## Installation & Setup
 
-### Prerequisites
-Ensure you have the following installed on your system:
-- Docker
-- Docker Compose
-- Node.js
-- MySQL
-- MailHog (for email testing)
-
-### Run Using Docker
-If you prefer running the API without Docker Compose, you can use the pre-built Docker image:
-
-- Clone the repository
-```bash
-git clone https://github.com/abigailajohn/user_management_api.git
-cd user_management_api
-```
-
-- Start the services
-```bash
-docker run -p 3000:3000 abigaila11/vvma 
-```
-
-### Running with Docker Compose
+### Run using Docker Compose (Recommended)
 This method runs the API in a containerized environment.
+
+Prerequisites
+- Docker
+- Docker compose
 
 - Clone the repository
 ```bash
@@ -89,7 +65,7 @@ This will start the API, database, and MailHog.
 docker ps
 ```
 
-- Access the API & Documentation:
+- Access the services:
 ```bash
 API Base URL: http://localhost:3000
 Swagger Docs: http://localhost:3000/api-docs
@@ -101,8 +77,29 @@ MailHog UI: http://localhost:8025
 docker-compose down
 ```
 
-### Running Locally
+### Run Using Docker only
+If you prefer running the API without Docker Compose, you can use the pre-built Docker image (but we recommend using docker-compose):
+
+- Clone the repository
+```bash
+git clone https://github.com/abigailajohn/user_management_api.git
+cd user_management_api
+```
+
+- Start the services
+```bash
+docker run -p 3000:3000 abigaila11/vvma 
+```
+
+### Run Locally
 If you prefer running the API without Docker, follow these steps:
+
+Prerequisites
+Ensure you have the following installed on your system:
+- Node.js 
+- MySQL 8.0 
+- MailHog
+
 - Clone the repository
 ```bash
 git clone https://github.com/abigailajohn/user_management_api.git
