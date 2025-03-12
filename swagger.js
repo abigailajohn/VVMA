@@ -6,9 +6,9 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'vManagement API',
+      title: 'VVMA',
       version: '1.0.0',
-      description: 'A simple Vulnerable Management API',
+      description: 'Very Vulnerable Management API (VVMA) is an intentionally vulnerable RESTful API for educational and testing purposes',
     },
     components: {
       securitySchemes: {

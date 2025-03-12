@@ -1,9 +1,9 @@
 {
     "openapi": "3.0.0",
     "info": {
-      "title": "Vulnerable Management API",
+      "title": "VVMA",
       "version": "1.0.0",
-      "description": "A simple User Management API with Swagger documentation"
+      "description": "Very Vulnerable Management API (VVMA) is an intentionally vulnerable RESTful API for educational and testing purposes"
     },
     "servers": [
       {
