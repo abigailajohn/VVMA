@@ -80,7 +80,7 @@ docker run -p 3000:3000 abigaila11/vvma
 ```
 
 ### Local Installation
-If you prefer running the API without Docker, follow these steps:
+Follow these steps to set up the project locally:
 
 Prerequisites
 - Node.js 
@@ -99,14 +99,10 @@ npm install
 ```
 
 3. Set up the database:
-Start MySQL and create a database. Import the database schema
+Import the pre-populated database:
+   
 ```bash
-mysql -u usermanage -p user_management < init.sql
-```
-If you encounter authentication issues, run
-```bash
-ALTER USER 'usermanage'@'%' IDENTIFIED WITH mysql_native_password BY 'db_password';
-FLUSH PRIVILEGES;
+sudo mysql -u root -p < src/db/init.sql
 ```
 
 3. Start MailHog
