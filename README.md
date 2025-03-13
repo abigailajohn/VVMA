@@ -3,10 +3,9 @@
 <img src="vvma.png" >
 </p>
 
-Very Vulnerable Management API (VVMA) is an intentionally vulnerable RESTful API built with Node.js for educational and testing purposes. It is designed to help security professionals, developers, and learners understand and mitigate common API security risks. 
-This API intentionally includes vulnerabilities from the OWASP Top 10 API Security Risks, allowing users to explore and test security flaws in user and group management systems.
+Very Vulnerable Management API (VVMA) is an intentionally vulnerable RESTful API built with Node.js for educational and testing purposes. It is designed to help security professionals, developers, and learners understand and mitigate common API security risks. VVMA intentionally includes vulnerabilities from the OWASP Top 10 API Security Risks, allowing users to explore and test security flaws in user management, group management, and password reset systems.
 
-VVMA is a valuable resource for improving API security skills through hands-on practice and code analysis.
+It is a valuable resource for improving application security skills through hands-on practice and code review.
 
 ## Features 💡
 ### User Endpoints:
@@ -17,13 +16,13 @@ VVMA is a valuable resource for improving API security skills through hands-on p
 
 ### Group Endpoints:
 - List all groups
-- Retrieve a group by ID (with its members and invite URL)
-- Create a new group (with an invite code generation)
+- Retrieve a group by ID
+- Create a new group (an invite code generated)
 - Join groups (by ID or via invite URL)
-- Refresh group invite codes
-- Update group details (admin only)
+- Refresh a group invite code
+- Update group details (admins only)
 - Delete a group (creator only)
-- Manage group membership (remove/promote)
+- Manage group membership (remove/promote members)
 
 ### Password Reset Endpoints:
 - Request password reset
@@ -31,6 +30,7 @@ VVMA is a valuable resource for improving API security skills through hands-on p
 
 ## List of Vulnerabilities🐞
 - Weak Password Policy
+- Broke Authentication
 - Broken Object Level Authorization (BOLA)
 - Broken Function Level Authorization (BFLA)
 - Weak JWT Implementation
