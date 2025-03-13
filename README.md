@@ -78,9 +78,10 @@ git clone https://github.com/abigailajohn/VVMA.git
 cd VVMA
 ```
 
-2. Start the services
+2. Build the image & Run the container
 ```bash
-docker run -p 3000:3000 abigaila11/vvma 
+docker build -t vvma .
+docker run -p 3000:3000 vvma 
 ```
 
 ### Local Installation
@@ -118,6 +119,10 @@ docker run -d -p 1025:1025 -p 8025:8025 mailhog/mailhog
 ```bash
 npm start
 ```
+
+### Contributing 🤝
+We welcome contributions to improve Very Vulnerable Management API (VVMA)! Whether you want to suggest new features, fix issues, or enhance documentation, your help is appreciated.
+
 
 ### Disclaimer ⚠️
 This API is intentionally vulnerable and is meant solely for educational and testing purposes. Do not deploy this code in a production environment. The vulnerabilities demonstrated here are examples of what to avoid in secure coding practices.
