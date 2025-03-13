@@ -30,7 +30,7 @@ It is a valuable resource for improving application security skills through hand
 
 ## List of Vulnerabilities🐞
 - Weak Password Policy
-- Broke Authentication
+- Broken Authentication
 - Broken Object Level Authorization (BOLA)
 - Broken Function Level Authorization (BFLA)
 - Weak JWT Implementation
