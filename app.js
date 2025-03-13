@@ -11,7 +11,7 @@ app.use(express.json());
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 app.get('/', (req, res) => {
-  res.send('Welcome to the Very Vulnerable Management API!');
+  res.send('<div style="text-align: center; font-size: 24px; font-weight: bold;">Welcome to the Very Vulnerable Management API!</div>');
 });
 
 app.use('/api', routes);
